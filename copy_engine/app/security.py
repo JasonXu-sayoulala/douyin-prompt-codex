@@ -12,6 +12,10 @@ def _wants_json() -> bool:
     return best == "application/json" or request.path.startswith("/render-jobs")
 
 
+def api_error(message: str, status_code: int = 400, *, code: str = "bad_request"):
+    return jsonify({"ok": False, "error": {"code": code, "message": message}}), status_code
+
+
 def register_error_handlers(app) -> None:
     @app.errorhandler(CSRFError)
     def handle_csrf_error(e):
