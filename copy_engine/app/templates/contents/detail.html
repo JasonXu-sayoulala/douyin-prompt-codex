@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}文案 #{{ content.id }}{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-start mb-3">
+  <div>
+    <h2 class="h4 mb-1">文案 #{{ content.id }}</h2>
+    <span class="badge bg-secondary">{{ content.status }}</span>
+    <span class="badge {% if content.risk_level == 'high' %}bg-danger{% elif content.risk_level == 'medium' %}bg-warning text-dark{% else %}bg-success{% endif %}">风险：{{ content.risk_level }}</span>
+    <span class="badge bg-info text-dark">{{ content.content_type }}</span>
+  </div>
+  <div>
+    <a class="btn btn-sm btn-outline-primary" href="{{ url_for('contents.edit', id=content.id) }}">编辑</a>
+    {% if content.status == 'approved' %}
+    <a class="btn btn-sm btn-primary" href="{{ url_for('contents.export_content', id=content.id, format='txt') }}">导出TXT</a>
+    <a class="btn btn-sm btn-primary" href="{{ url_for('contents.export_content', id=content.id, format='json') }}">导出JSON</a>
+    <a class="btn btn-sm btn-outline-primary" href="{{ url_for('contents.export_content', id=content.id, format='copy') }}">复制视图</a>
+    {% if current_user.role == 'admin' %}
+    <a class="btn btn-sm btn-outline-danger" title="管理员高风险导出" href="{{ url_for('contents.export_content', id=content.id, format='txt', confirm=1) }}">TXT(确认)</a>
+    {% endif %}
+    {% endif %}
+  </div>
+</div>
+<div class="card shadow-sm mb-3">
+  <div class="card-header">标题</div>
+  <div class="card-body">{{ content.title or '—' }}</div>
+</div>
+<div class="card shadow-sm mb-3">
+  <div class="card-header">正文</div>
+  <div class="card-body"><pre class="mb-0" style="white-space:pre-wrap;font-family:inherit;">{{ content.body or '—' }}</pre></div>
+</div>
+<div class="row">
+  <div class="col-md-6 mb-3">
+    <div class="card shadow-sm h-100">
+      <div class="card-header">评论引导</div>
+      <div class="card-body small">{{ content.comment_hook or '—' }}</div>
+    </div>
+  </div>
+  <div class="col-md-6 mb-3">
+    <div class="card shadow-sm h-100">
+      <div class="card-header">封面短句</div>
+      <div class="card-body small">{{ content.cover_text or '—' }}</div>
+    </div>
+  </div>
+</div>
+
+<div class="card shadow-sm mb-3">
+  <div class="card-header">改写</div>
+  <div class="card-body">
+    <form class="d-flex flex-wrap gap-2" method="post" action="{{ url_for('contents.rewrite', id=content.id) }}">
+      {% for val, label in [
+        ('more_human','更像真人'),
+        ('more_conflict','更有争议'),
+        ('more_piercing','更扎心'),
+        ('shorten','更短'),
+        ('chat_format','改聊天格式'),
+        ('spoken_format','改口播格式'),
+        ('regen_3','再生成3版'),
+      ] %}
+      <button type="submit" name="action" value="{{ val }}" class="btn btn-outline-primary btn-sm">{{ label }}</button>
+      {% endfor %}
+    </form>
+  </div>
+</div>
+
+<div class="d-flex flex-wrap gap-2">
+  {% if content.status == 'generated' %}
+  <form method="post" action="{{ url_for('contents.save_review', id=content.id) }}">
+    <button type="submit" class="btn btn-primary">保存到审核池</button>
+  </form>
+  {% endif %}
+  <a class="btn btn-outline-secondary" href="{{ url_for('reviews.detail', content_id=content.id) }}">审核视角</a>
+</div>
+{% endblock %}

@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}仪表盘{% endblock %}
+{% block content %}
+<h2 class="mb-4">首页仪表盘</h2>
+<div class="row g-3">
+  <div class="col-md-4 col-lg-2">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body">
+        <div class="text-muted small">今日新增选题</div>
+        <div class="fs-3 fw-semibold">{{ topics_today }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4 col-lg-2">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body">
+        <div class="text-muted small">今日生成文案</div>
+        <div class="fs-3 fw-semibold">{{ contents_today }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4 col-lg-2">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body">
+        <div class="text-muted small">待审核</div>
+        <div class="fs-3 fw-semibold text-warning">{{ pending }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4 col-lg-2">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body">
+        <div class="text-muted small">已通过</div>
+        <div class="fs-3 fw-semibold text-success">{{ approved }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4 col-lg-2">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body">
+        <div class="text-muted small">启用模板数</div>
+        <div class="fs-3 fw-semibold">{{ tpl_count }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="mt-4">
+  <a class="btn btn-primary me-2" href="{{ url_for('topics.create') }}">新建选题</a>
+  <a class="btn btn-outline-primary" href="{{ url_for('reviews.list_reviews') }}">进入审核池</a>
+</div>
+{% endblock %}

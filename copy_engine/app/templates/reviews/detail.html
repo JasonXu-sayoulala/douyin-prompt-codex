@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}审核 — #{{ content.id }}{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h2 class="h4 mb-0">审核文案 #{{ content.id }}</h2>
+  <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('contents.detail', id=content.id) }}">完整编辑/改写</a>
+</div>
+<div class="card shadow-sm mb-3">
+  <div class="card-body">
+    <p><strong>状态：</strong>{{ content.status }}</p>
+    <h5>{{ content.title }}</h5>
+    <pre class="small" style="white-space:pre-wrap;font-family:inherit;">{{ content.body }}</pre>
+  </div>
+</div>
+
+{% if content.status == 'pending_review' %}
+<div class="d-flex flex-wrap gap-2 mb-3">
+  <form method="post" action="{{ url_for('reviews.approve', content_id=content.id) }}">
+    <button type="submit" class="btn btn-success">审核通过</button>
+  </form>
+  <form method="post" action="{{ url_for('reviews.void_content', content_id=content.id) }}" onsubmit="return confirm('确认作废？');">
+    <button type="submit" class="btn btn-outline-danger">作废</button>
+  </form>
+</div>
+<div class="card shadow-sm mb-3">
+  <div class="card-header">驳回（需备注）</div>
+  <div class="card-body">
+    <form method="post" action="{{ url_for('reviews.reject', content_id=content.id) }}">
+      <textarea class="form-control mb-2" name="review_note" rows="3" placeholder="驳回原因" required></textarea>
+      <button type="submit" class="btn btn-warning">驳回</button>
+    </form>
+  </div>
+</div>
+{% endif %}
+
+<div class="card shadow-sm mb-3">
+  <div class="card-header">收藏为模板</div>
+  <div class="card-body">
+    <form method="post" action="{{ url_for('reviews.favorite_template', content_id=content.id) }}" class="row g-2">
+      <div class="col-md-8">
+        <input class="form-control" name="name" placeholder="新模板名称" value="收藏-{{ (content.title or '')[:40] }}">
+      </div>
+      <div class="col-md-4">
+        <button type="submit" class="btn btn-primary w-100">保存为模板</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<a class="btn btn-link" href="{{ url_for('reviews.list_reviews') }}">返回审核池</a>
+{% endblock %}

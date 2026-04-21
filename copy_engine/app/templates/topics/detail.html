@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}选题详情{% endblock %}
+{% block content %}
+<h2 class="mb-3">{{ topic.title }}</h2>
+<div class="card shadow-sm mb-3">
+  <div class="card-body row">
+    <div class="col-md-6"><strong>分类：</strong>{{ topic.category or '—' }}</div>
+    <div class="col-md-6"><strong>标签：</strong>{{ topic.tags or '—' }}</div>
+    <div class="col-md-6 mt-2"><strong>情绪强度：</strong>{{ topic.emotion_level }}</div>
+    <div class="col-md-6 mt-2"><strong>来源：</strong>{{ topic.source or '—' }}</div>
+    <div class="col-md-6 mt-2"><strong>状态：</strong>{{ topic.status }}</div>
+  </div>
+</div>
+<a class="btn btn-primary me-2" href="{{ url_for('contents.generate', topic_id=topic.id) }}">去生成文案</a>
+<form class="d-inline" method="post" action="{{ url_for('topics.archive', topic_id=topic.id) }}" onsubmit="return confirm('确认归档？');">
+  <button type="submit" class="btn btn-outline-danger">归档</button>
+</form>
+<a class="btn btn-link" href="{{ url_for('topics.list_topics') }}">返回</a>
+{% endblock %}

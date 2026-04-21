@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}编辑文案{% endblock %}
+{% block content %}
+<h2 class="mb-3">编辑文案 #{{ content.id }}</h2>
+<form method="post" class="card shadow-sm">
+  <div class="card-body">
+    <div class="mb-3">
+      <label class="form-label">标题</label>
+      <textarea class="form-control" name="title" rows="2">{{ content.title or '' }}</textarea>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">正文</label>
+      <textarea class="form-control" name="body" rows="14">{{ content.body or '' }}</textarea>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">评论引导</label>
+      <textarea class="form-control" name="comment_hook" rows="3">{{ content.comment_hook or '' }}</textarea>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">封面短句</label>
+      <textarea class="form-control" name="cover_text" rows="2">{{ content.cover_text or '' }}</textarea>
+    </div>
+    <button type="submit" class="btn btn-primary">保存</button>
+    <a class="btn btn-link" href="{{ url_for('contents.detail', id=content.id) }}">取消</a>
+  </div>
+</form>
+{% endblock %}

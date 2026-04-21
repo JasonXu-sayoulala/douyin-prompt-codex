@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}导出复制{% endblock %}
+{% block content %}
+<h2 class="mb-3">一键复制 — 文案 #{{ content.id }}</h2>
+<div class="alert alert-info">风险扫描：{{ risk.message }}（{{ risk.level }}）</div>
+<div class="card shadow-sm mb-3">
+  <div class="card-body">
+    <pre id="exportBlock" class="mb-3" style="white-space:pre-wrap;font-family:inherit;">{% if payload.export_template == 'A_chat' %}标题
+{{ content.title }}
+
+正文/对话
+{{ content.body }}
+
+评论引导
+{{ content.comment_hook }}{% else %}标题
+{{ content.title }}
+
+开头钩子
+{{ payload.hook }}
+
+正文
+{{ content.body }}
+
+结尾互动
+{{ content.comment_hook }}{% endif %}</pre>
+    <button type="button" class="btn btn-primary" id="copyBtn">复制到剪贴板</button>
+    <a class="btn btn-link" href="{{ url_for('contents.detail', id=content.id) }}">返回</a>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+document.getElementById('copyBtn').addEventListener('click', function() {
+  const t = document.getElementById('exportBlock').innerText;
+  navigator.clipboard.writeText(t).then(() => alert('已复制'));
+});
+</script>
+{% endblock %}

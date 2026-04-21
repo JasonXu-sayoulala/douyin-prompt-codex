@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}新建选题{% endblock %}
+{% block content %}
+<h2 class="mb-3">新建选题</h2>
+<div class="card shadow-sm" style="max-width:720px">
+  <div class="card-body">
+    <form method="post">
+      <div class="mb-3">
+        <label class="form-label">标题 <span class="text-danger">*</span></label>
+        <input class="form-control" name="title" required maxlength="255">
+      </div>
+      <div class="mb-3">
+        <label class="form-label">分类</label>
+        <select class="form-select" name="category">
+          <option value="">请选择</option>
+          {% for c in categories %}
+          <option value="{{ c }}">{{ c }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">标签（逗号分隔）</label>
+        <input class="form-control" name="tags" placeholder="婆媳,冷战">
+      </div>
+      <div class="mb-3">
+        <label class="form-label">情绪强度 1~5</label>
+        <input type="number" class="form-control" name="emotion_level" value="3" min="1" max="5">
+      </div>
+      <div class="mb-3">
+        <label class="form-label">来源</label>
+        <input class="form-control" name="source" placeholder="热搜 / 对标账号 / 内部选题会">
+      </div>
+      <button type="submit" class="btn btn-primary">保存</button>
+      <a class="btn btn-link" href="{{ url_for('topics.list_topics') }}">返回列表</a>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}{% if tpl %}编辑模板{% else %}新建模板{% endif %}{% endblock %}
+{% block content %}
+<h2 class="mb-3">{% if tpl %}编辑模板{% else %}新建模板{% endif %}</h2>
+<div class="card shadow-sm">
+  <div class="card-body">
+    <form method="post" action="{% if tpl %}{{ url_for('prompt_templates.edit', id=tpl.id) }}{% else %}{{ url_for('prompt_templates.create') }}{% endif %}">
+      <div class="mb-3">
+        <label class="form-label">模板名称 <span class="text-danger">*</span></label>
+        <input class="form-control" name="name" required value="{{ tpl.name if tpl else '' }}">
+      </div>
+      <div class="mb-3">
+        <label class="form-label">模板类型</label>
+        <input class="form-control" name="template_type" placeholder="strong_conflict / chat / spoken …" value="{{ tpl.template_type if tpl else '' }}">
+      </div>
+      <div class="mb-3">
+        <label class="form-label">提示词正文 <span class="text-danger">*</span></label>
+        <textarea class="form-control" name="prompt" rows="10" required>{{ tpl.prompt if tpl else '' }}</textarea>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">描述</label>
+        <textarea class="form-control" name="description" rows="3">{{ tpl.description if tpl else '' }}</textarea>
+      </div>
+      <div class="form-check mb-3">
+        <input class="form-check-input" type="checkbox" name="is_active" id="is_active" {% if not tpl or tpl.is_active %}checked{% endif %}>
+        <label class="form-check-label" for="is_active">启用</label>
+      </div>
+      <button type="submit" class="btn btn-primary">保存</button>
+      <a class="btn btn-link" href="{{ url_for('prompt_templates.list_templates') }}">返回列表</a>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}登录 — 抖音文案引擎{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-4">
+    <div class="card shadow-sm mt-5">
+      <div class="card-body">
+        <h5 class="card-title mb-3">登录</h5>
+        <form method="post">
+          <div class="mb-3">
+            <label class="form-label">用户名</label>
+            <input class="form-control" name="username" required autocomplete="username">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">密码</label>
+            <input type="password" class="form-control" name="password" required autocomplete="current-password">
+          </div>
+          <button type="submit" class="btn btn-primary w-100">登录</button>
+        </form>
+        <p class="text-muted small mt-3 mb-0">首次启动默认账户：<code>admin</code> / <code>admin123</code></p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

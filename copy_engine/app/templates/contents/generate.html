@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}文案生成{% endblock %}
+{% block content %}
+<h2 class="mb-3">文案生成</h2>
+<div class="row">
+  <div class="col-lg-4 mb-3">
+    <div class="card shadow-sm h-100">
+      <div class="card-header">选题信息</div>
+      <div class="card-body">
+        <h5>{{ topic.title }}</h5>
+        <p class="small text-muted mb-1">分类：{{ topic.category or '—' }}</p>
+        <p class="small text-muted mb-0">默认情绪：{{ topic.emotion_level }}</p>
+        <a class="btn btn-sm btn-outline-secondary mt-2" href="{{ url_for('topics.detail', topic_id=topic.id) }}">选题详情</a>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-8">
+    <div class="card shadow-sm mb-3">
+      <div class="card-header">模板与参数</div>
+      <div class="card-body">
+        <form method="post" id="genForm" onsubmit="document.getElementById('genBtn').disabled=true; document.getElementById('genSpinner').classList.remove('d-none');">
+          <div class="mb-3">
+            <label class="form-label">模板 <span class="text-danger">*</span></label>
+            <select class="form-select" name="template_id" required>
+              {% for t in templates %}
+              <option value="{{ t.id }}">{{ t.name }}（{{ t.template_type or '通用' }}）</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">内容类型</label>
+            <select class="form-select" name="content_type">
+              <option value="chat">聊天记录型</option>
+              <option value="spoken">口播型</option>
+              <option value="story">剧情摘要型</option>
+            </select>
+          </div>
+          <div class="row">
+            <div class="col-md-4 mb-3">
+              <label class="form-label">生成数量（正文版数）</label>
+              <input type="number" class="form-control" name="variants" value="3" min="1" max="5">
+            </div>
+            <div class="col-md-4 mb-3">
+              <label class="form-label">情绪强度</label>
+              <input type="number" class="form-control" name="emotion_level" value="{{ topic.emotion_level }}" min="1" max="5">
+            </div>
+            <div class="col-md-4 mb-3">
+              <label class="form-label">单版约字数上限</label>
+              <input type="number" class="form-control" name="max_length" value="280" min="80" max="800">
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary" id="genBtn">生成</button>
+          <span id="genSpinner" class="d-none spinner-border spinner-border-sm ms-2" role="status"></span>
+        </form>
+      </div>
+    </div>
+    {% if recent %}
+    <div class="card shadow-sm">
+      <div class="card-header">本选题最近生成</div>
+      <div class="list-group list-group-flush">
+        {% for c in recent %}
+        <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" href="{{ url_for('contents.detail', id=c.id) }}">
+          <span>#{{ c.id }} {{ (c.title or '')[:40] }}…</span>
+          <span class="badge bg-secondary">{{ c.status }}</span>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

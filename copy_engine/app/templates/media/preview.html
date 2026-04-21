@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}预览媒体 - {{ content.title }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>媒体预览</h2>
+    
+    <div class="row mt-4">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5>视频预览</h5>
+                </div>
+                <div class="card-body">
+                    {% if video_exists %}
+                    <video controls style="width: 100%; max-height: 600px;">
+                        <source src="{{ video_url }}" type="video/mp4">
+                        您的浏览器不支持视频播放。
+                    </video>
+                    {% else %}
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i> 视频文件不存在
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5>文案内容</h5>
+                </div>
+                <div class="card-body">
+                    <h6>标题</h6>
+                    <p>{{ content.title or '无标题' }}</p>
+                    
+                    <h6 class="mt-3">正文</h6>
+                    <p style="white-space: pre-wrap;">{{ content.body or '无内容' }}</p>
+                    
+                    {% if content.comment_hook %}
+                    <h6 class="mt-3">评论引导</h6>
+                    <p>{{ content.comment_hook }}</p>
+                    {% endif %}
+                    
+                    {% if content.cover_text %}
+                    <h6 class="mt-3">封面文字</h6>
+                    <p>{{ content.cover_text }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5>操作</h5>
+                </div>
+                <div class="card-body">
+                    {% if video_exists %}
+                    <a href="{{ video_url }}" class="btn btn-success btn-block mb-2" download>
+                        <i class="bi bi-download"></i> 下载视频
+                    </a>
+                    {% endif %}
+                    <a href="{{ url_for('contents.detail', id=content.id) }}" class="btn btn-secondary btn-block mb-2">
+                        <i class="bi bi-file-text"></i> 查看文案详情
+                    </a>
+                    <a href="{{ url_for('media.generate_media') }}" class="btn btn-primary btn-block">
+                        <i class="bi bi-plus-circle"></i> 生成新媒体
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}模板库{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h2 class="mb-0">模板库</h2>
+  <a class="btn btn-primary" href="{{ url_for('prompt_templates.create') }}">新建模板</a>
+</div>
+<div class="table-responsive card shadow-sm">
+  <table class="table table-hover mb-0">
+    <thead class="table-light">
+      <tr>
+        <th>名称</th>
+        <th>类型</th>
+        <th>描述</th>
+        <th>启用</th>
+        <th>操作</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for t in items %}
+      <tr>
+        <td>{{ t.name }}</td>
+        <td>{{ t.template_type or '—' }}</td>
+        <td class="small text-muted">{{ (t.description or '')[:80] }}</td>
+        <td>{% if t.is_active %}是{% else %}否{% endif %}</td>
+        <td>
+          <a class="btn btn-sm btn-outline-primary" href="{{ url_for('prompt_templates.edit', id=t.id) }}">编辑</a>
+          <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('prompt_templates.apply_redirect', id=t.id) }}">套用</a>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="5" class="text-center text-muted py-4">暂无模板</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

@@ -1,0 +1,216 @@
+{% extends "base.html" %}
+
+{% block title %}媒体生成 - 文案转视频{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>媒体生成：文案 → 图片 → 视频</h2>
+    <p class="text-muted">根据主题和模板生成文案，然后自动生成配图和走马灯视频</p>
+
+    <form id="mediaGenerateForm" class="mt-4">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label for="topicSelect" class="form-label">选择主题</label>
+                    <select class="form-select" id="topicSelect" name="topic_id" required>
+                        <option value="">-- 请选择主题 --</option>
+                        {% for topic in topics %}
+                        <option value="{{ topic.id }}">{{ topic.title }} ({{ topic.category }})</option>
+                        {% endfor %}
+                    </select>
+                    <div class="form-text">或 <a href="{{ url_for('topics.create') }}">创建新主题</a></div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label for="templateSelect" class="form-label">选择文案模板</label>
+                    <select class="form-select" id="templateSelect" name="template_id" required>
+                        <option value="">-- 请选择模板 --</option>
+                        {% for template in templates %}
+                        <option value="{{ template.id }}" data-description="{{ template.description }}">
+                            {{ template.name }} ({{ template.template_type }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <div class="form-text" id="templateDescription"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label for="mediaType" class="form-label">媒体类型</label>
+                    <select class="form-select" id="mediaType" name="media_type">
+                        <option value="slideshow">走马灯视频</option>
+                        <option value="images">仅生成图片</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label for="numImages" class="form-label">图片数量</label>
+                    <input type="number" class="form-control" id="numImages" name="num_images" 
+                           value="3" min="1" max="10">
+                    <div class="form-text">生成的图片数量（1-10张）</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <button type="submit" class="btn btn-primary" id="generateBtn">
+                <i class="bi bi-play-circle"></i> 开始生成
+            </button>
+            <button type="button" class="btn btn-secondary" id="resetBtn">
+                <i class="bi bi-arrow-clockwise"></i> 重置
+            </button>
+        </div>
+    </form>
+
+    <!-- 进度显示 -->
+    <div id="progressSection" class="mt-4" style="display: none;">
+        <h4>生成进度</h4>
+        <div class="progress">
+            <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated" 
+                 role="progressbar" style="width: 0%"></div>
+        </div>
+        <div id="progressText" class="mt-2 text-muted"></div>
+    </div>
+
+    <!-- 结果显示 -->
+    <div id="resultSection" class="mt-4" style="display: none;">
+        <h4>生成结果</h4>
+        <div class="alert alert-success">
+            <i class="bi bi-check-circle"></i> <span id="resultMessage"></span>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">操作</h5>
+                        <a id="previewLink" href="#" class="btn btn-info" target="_blank">
+                            <i class="bi bi-eye"></i> 预览
+                        </a>
+                        <a id="downloadLink" href="#" class="btn btn-success" download>
+                            <i class="bi bi-download"></i> 下载视频
+                        </a>
+                        <a id="contentLink" href="#" class="btn btn-secondary">
+                            <i class="bi bi-file-text"></i> 查看文案
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 错误显示 -->
+    <div id="errorSection" class="mt-4" style="display: none;">
+        <div class="alert alert-danger">
+            <i class="bi bi-exclamation-triangle"></i> <span id="errorMessage"></span>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('mediaGenerateForm');
+    const generateBtn = document.getElementById('generateBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const progressSection = document.getElementById('progressSection');
+    const resultSection = document.getElementById('resultSection');
+    const errorSection = document.getElementById('errorSection');
+    const templateSelect = document.getElementById('templateSelect');
+    const templateDescription = document.getElementById('templateDescription');
+
+    // 显示模板描述
+    templateSelect.addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        const description = selectedOption.getAttribute('data-description');
+        templateDescription.textContent = description || '';
+    });
+
+    // 表单提交
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        // 隐藏之前的结果
+        resultSection.style.display = 'none';
+        errorSection.style.display = 'none';
+        progressSection.style.display = 'block';
+        
+        // 禁用按钮
+        generateBtn.disabled = true;
+        
+        // 获取表单数据
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
+        
+        try {
+            // 更新进度
+            updateProgress(10, '正在生成文案...');
+            
+            // 发送请求
+            const response = await fetch('/media/generate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            });
+            
+            if (!response.ok) {
+                throw new Error('生成失败');
+            }
+            
+            updateProgress(50, '文案生成完成，正在生成图片...');
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                updateProgress(100, '生成完成！');
+                
+                // 显示结果
+                setTimeout(() => {
+                    progressSection.style.display = 'none';
+                    resultSection.style.display = 'block';
+                    
+                    document.getElementById('resultMessage').textContent = result.message;
+                    document.getElementById('previewLink').href = `/media/preview/${result.content_id}`;
+                    document.getElementById('downloadLink').href = `/media/download/${result.content_id}`;
+                    document.getElementById('contentLink').href = `/contents/${result.content_id}`;
+                }, 1000);
+            } else {
+                throw new Error(result.error || '生成失败');
+            }
+            
+        } catch (error) {
+            progressSection.style.display = 'none';
+            errorSection.style.display = 'block';
+            document.getElementById('errorMessage').textContent = error.message;
+        } finally {
+            generateBtn.disabled = false;
+        }
+    });
+
+    // 重置按钮
+    resetBtn.addEventListener('click', function() {
+        form.reset();
+        resultSection.style.display = 'none';
+        errorSection.style.display = 'none';
+        progressSection.style.display = 'none';
+        templateDescription.textContent = '';
+    });
+
+    function updateProgress(percent, text) {
+        const progressBar = document.getElementById('progressBar');
+        const progressText = document.getElementById('progressText');
+        progressBar.style.width = percent + '%';
+        progressBar.setAttribute('aria-valuenow', percent);
+        progressText.textContent = text;
+    }
+});
+</script>
+{% endblock %}
