@@ -80,7 +80,7 @@ class RewriteService:
         try:
             data = json.loads(_strip_json_fence(raw))
         except json.JSONDecodeError:
-            m = re.search(r"\{{[\s\S]*\}}", raw)
+            m = re.search(r"\{[\s\S]*\}", raw)
             data = json.loads(m.group()) if m else {"body": raw}
 
         log = RewriteLog(
