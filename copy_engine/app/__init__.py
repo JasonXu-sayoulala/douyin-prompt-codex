@@ -2,6 +2,7 @@ import os
 import sys
 
 from flask import Flask
+from sqlalchemy import text
 
 _ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if _ROOT not in sys.path:
@@ -14,20 +15,23 @@ try:
 except ImportError:
     pass
 
-from sqlalchemy import text
-
 from config import Config
 
-from .extensions import db, login_manager
+from .extensions import csrf, db, login_manager
 from .models import User
 from .services.llm_service import LLMService
 from .services.risk_service import RiskService
 from .services.media_generation_service import media_service as media_service_singleton
+from .security import register_error_handlers
 
 
 def create_app(config_object=None):
     app = Flask(__name__)
     app.config.from_object(config_object or Config)
+
+    app.config.setdefault("DSP_BASE_URL", os.environ.get("DSP_BASE_URL", "http://127.0.0.1:8000"))
+    app.config.setdefault("DSP_API_KEY", os.environ.get("DSP_API_KEY", ""))
+    app.config.setdefault("DSP_TIMEOUT_SECONDS", int(os.environ.get("DSP_TIMEOUT_SECONDS", "120")))
 
     os.makedirs(app.config["INSTANCE_PATH"], exist_ok=True)
 
@@ -40,6 +44,7 @@ def create_app(config_object=None):
         app.config["SQLALCHEMY_ENGINE_OPTIONS"] = eng_opts
 
     db.init_app(app)
+    csrf.init_app(app)
     login_manager.init_app(app)
 
     llm = LLMService()
@@ -56,6 +61,8 @@ def create_app(config_object=None):
     def load_user(user_id):
         return db.session.get(User, int(user_id))
 
+    register_error_handlers(app)
+
     from .routes.auth import auth_bp
     from .routes.dashboard import dashboard_bp
     from .routes.topics import topics_bp
@@ -63,6 +70,7 @@ def create_app(config_object=None):
     from .routes.reviews import reviews_bp
     from .routes.prompt_templates import templates_bp
     from .routes.media import bp as media_bp
+    from .routes.render_jobs import render_jobs_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)
@@ -71,8 +79,15 @@ def create_app(config_object=None):
     app.register_blueprint(reviews_bp, url_prefix="/reviews")
     app.register_blueprint(templates_bp, url_prefix="/templates")
     app.register_blueprint(media_bp, url_prefix="/media")
+    app.register_blueprint(render_jobs_bp)
+
+    @app.get("/healthz")
+    def healthz():
+        return {"ok": True}
 
     with app.app_context():
+        from . import models_rendering  # noqa: F401
+
         db.create_all()
         _repair_sqlite_schema_if_needed()
         _seed_if_empty()
@@ -94,6 +109,10 @@ def _repair_sqlite_schema_if_needed() -> None:
         "rewrite_logs",
         "review_records",
         "operation_logs",
+        "render_jobs",
+        "media_assets",
+        "storyboard_scenes",
+        "audio_tracks",
     )
 
     def _id_is_primary_key(table: str) -> bool:
