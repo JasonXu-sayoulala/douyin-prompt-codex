@@ -4,16 +4,45 @@
 <h2 class="mb-3">文案生成</h2>
 <div class="row">
   <div class="col-lg-4 mb-3">
-    <div class="card shadow-sm h-100">
+    <div class="card shadow-sm mb-3">
       <div class="card-header">选题信息</div>
       <div class="card-body">
         <h5>{{ topic.title }}</h5>
         <p class="small text-muted mb-1">分类：{{ topic.category or '—' }}</p>
-        <p class="small text-muted mb-0">默认情绪：{{ topic.emotion_level }}</p>
+        <p class="small text-muted mb-1">默认情绪：{{ topic.emotion_level }}</p>
+        <p class="small text-muted mb-0">来源：{{ topic.source or '手工选题' }}</p>
         <a class="btn btn-sm btn-outline-secondary mt-2" href="{{ url_for('topics.detail', topic_id=topic.id) }}">选题详情</a>
       </div>
     </div>
+
+    {% if source_material %}
+    <div class="card shadow-sm mb-3 border-primary">
+      <div class="card-header bg-primary text-white">素材池依据</div>
+      <div class="card-body">
+        <h6>{{ source_material.title or '未命名素材' }}</h6>
+        <div class="small text-muted mb-2">
+          {{ source_material.platform }} · {{ source_material.category or '未分类' }}
+        </div>
+        <div class="mb-2">
+          <span class="badge text-bg-danger">热度 {{ source_material.viral_score }}</span>
+          <span class="badge text-bg-warning">争议 {{ source_material.discussion_score }}</span>
+        </div>
+        {% if material_insight %}
+        <dl class="small mb-0">
+          <dt>冲突点</dt><dd>{{ material_insight.conflict_point or '—' }}</dd>
+          <dt>痛点</dt><dd>{{ material_insight.pain_point or '—' }}</dd>
+          <dt>目标人群</dt><dd>{{ material_insight.audience or '—' }}</dd>
+          <dt>推荐钩子</dt><dd>{{ material_insight.hook or '—' }}</dd>
+        </dl>
+        {% else %}
+        <div class="small text-muted">该素材尚未拆解，建议先回到素材详情页点击“拆解爆点”。</div>
+        {% endif %}
+        <a class="btn btn-sm btn-outline-primary mt-2" href="{{ url_for('materials.detail', material_id=source_material.id) }}">查看素材详情</a>
+      </div>
+    </div>
+    {% endif %}
   </div>
+
   <div class="col-lg-8">
     <div class="card shadow-sm mb-3">
       <div class="card-header">模板与参数</div>
@@ -49,6 +78,11 @@
               <input type="number" class="form-control" name="max_length" value="280" min="80" max="800">
             </div>
           </div>
+          {% if source_material %}
+          <div class="alert alert-info small">
+            本次生成会自动注入素材池上下文：原始素材、热门评论、冲突点、痛点、目标人群和改写建议。
+          </div>
+          {% endif %}
           <button type="submit" class="btn btn-primary" id="genBtn">生成</button>
           <span id="genSpinner" class="d-none spinner-border spinner-border-sm ms-2" role="status"></span>
         </form>
