@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block title %}素材详情{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-start mb-3">
+  <div>
+    <h2 class="mb-1">{{ material.title or '未命名素材' }}</h2>
+    <div class="text-muted small">
+      {{ material.platform }} · {{ material.category or '未分类' }} · 状态：{{ material.status }}
+      {% if material.source_account %} · 来源账号：{{ material.source_account }}{% endif %}
+    </div>
+  </div>
+  <div class="text-nowrap">
+    <form method="post" action="{{ url_for('materials.analyze', material_id=material.id) }}" class="d-inline">
+      <button class="btn btn-primary" type="submit">拆解爆点</button>
+    </form>
+    <form method="post" action="{{ url_for('materials.to_topic', material_id=material.id) }}" class="d-inline">
+      <button class="btn btn-success" type="submit">转为选题</button>
+    </form>
+    <a class="btn btn-outline-secondary" href="{{ url_for('materials.list_materials') }}">返回</a>
+  </div>
+</div>
+
+<div class="row g-3 mb-3">
+  <div class="col-md-3">
+    <div class="card border-0 shadow-sm"><div class="card-body">
+      <div class="text-muted small">爆款潜力分</div>
+      <div class="fs-2 fw-bold text-danger">{{ material.viral_score }}</div>
+    </div></div>
+  </div>
+  <div class="col-md-3">
+    <div class="card border-0 shadow-sm"><div class="card-body">
+      <div class="text-muted small">评论争议分</div>
+      <div class="fs-2 fw-bold text-warning">{{ material.discussion_score }}</div>
+    </div></div>
+  </div>
+  <div class="col-md-6">
+    <div class="card border-0 shadow-sm"><div class="card-body">
+      <div class="text-muted small">互动数据</div>
+      <div class="d-flex gap-3 flex-wrap mt-2">
+        <span>点赞：{{ material.like_count }}</span>
+        <span>评论：{{ material.comment_count }}</span>
+        <span>分享：{{ material.share_count }}</span>
+        <span>收藏：{{ material.collect_count }}</span>
+      </div>
+      {% if material.source_url %}<a class="small" href="{{ material.source_url }}" target="_blank">打开来源链接</a>{% endif %}
+    </div></div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-6">
+    <div class="card shadow-sm h-100">
+      <div class="card-header bg-white fw-semibold">原始素材</div>
+      <div class="card-body">
+        <h6>正文 / 描述</h6>
+        <pre class="bg-light p-3 rounded small" style="white-space: pre-wrap;">{{ material.raw_text or '—' }}</pre>
+        <h6 class="mt-3">热门评论</h6>
+        <pre class="bg-light p-3 rounded small" style="white-space: pre-wrap;">{{ material.hot_comments or '—' }}</pre>
+        <h6 class="mt-3">标签</h6>
+        <div>{{ material.tags or '—' }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="card shadow-sm h-100">
+      <div class="card-header bg-white fw-semibold">最新爆点拆解</div>
+      <div class="card-body">
+        {% if latest_insight %}
+        <dl class="row">
+          <dt class="col-sm-3">冲突点</dt><dd class="col-sm-9">{{ latest_insight.conflict_point or '—' }}</dd>
+          <dt class="col-sm-3">痛点</dt><dd class="col-sm-9">{{ latest_insight.pain_point or '—' }}</dd>
+          <dt class="col-sm-3">目标人群</dt><dd class="col-sm-9">{{ latest_insight.audience or '—' }}</dd>
+          <dt class="col-sm-3">开头钩子</dt><dd class="col-sm-9">{{ latest_insight.hook or '—' }}</dd>
+          <dt class="col-sm-3">故事角度</dt><dd class="col-sm-9">{{ latest_insight.story_angle or '—' }}</dd>
+          <dt class="col-sm-3">改写建议</dt><dd class="col-sm-9">{{ latest_insight.rewrite_suggestion or '—' }}</dd>
+          <dt class="col-sm-3">风险备注</dt><dd class="col-sm-9">{{ latest_insight.risk_note or '—' }}</dd>
+        </dl>
+        {% else %}
+        <div class="text-muted py-4 text-center">还没有拆解结果，点击右上角「拆解爆点」。</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+{% if insights|length > 1 %}
+<div class="card shadow-sm mt-3">
+  <div class="card-header bg-white fw-semibold">历史拆解</div>
+  <div class="list-group list-group-flush">
+    {% for insight in insights[1:] %}
+    <div class="list-group-item">
+      <div class="small text-muted">{{ insight.created_at.strftime('%Y-%m-%d %H:%M') }} · 热度 {{ insight.viral_score }} · 争议 {{ insight.discussion_score }}</div>
+      <div>{{ insight.hook or insight.conflict_point }}</div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+{% endblock %}
