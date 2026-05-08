@@ -10,7 +10,6 @@ if _ROOT not in sys.path:
 
 try:
     from dotenv import load_dotenv
-
     load_dotenv(os.path.join(_ROOT, ".env"))
 except ImportError:
     pass
@@ -28,15 +27,8 @@ from .security import register_error_handlers
 def create_app(config_object=None):
     app = Flask(__name__)
     app.config.from_object(config_object or Config)
-
-    app.config.setdefault("DSP_BASE_URL", os.environ.get("DSP_BASE_URL", "http://127.0.0.1:8000"))
-    app.config.setdefault("DSP_API_KEY", os.environ.get("DSP_API_KEY", ""))
-    app.config.setdefault("DSP_TIMEOUT_SECONDS", int(os.environ.get("DSP_TIMEOUT_SECONDS", "120")))
-
     os.makedirs(app.config["INSTANCE_PATH"], exist_ok=True)
 
-    # SQLAlchemy 2 + SQLite：insertmanyvalues 批量插入多行时，RETURNING id 与自增主键
-    # 在部分环境（如 Python 3.14 + sqlite）会触发 NOT NULL failed on *.id
     db_uri = str(app.config.get("SQLALCHEMY_DATABASE_URI") or "")
     if db_uri.startswith("sqlite"):
         eng_opts = dict(app.config.get("SQLALCHEMY_ENGINE_OPTIONS") or {})
@@ -51,7 +43,6 @@ def create_app(config_object=None):
     llm.init_app(app)
     risk = RiskService()
     risk.init_app(app)
-    # 必须与 routes 里用的是同一实例，否则模块级 media_service 未 init_app，_output_dir 为 None
     media_service_singleton.init_app(app)
     app.extensions["llm_service"] = llm
     app.extensions["risk_service"] = risk
@@ -70,6 +61,7 @@ def create_app(config_object=None):
     from .routes.reviews import reviews_bp
     from .routes.prompt_templates import templates_bp
     from .routes.media import bp as media_bp
+    from .routes.materials import materials_bp
     from .routes.render_jobs import render_jobs_bp
 
     app.register_blueprint(auth_bp)
@@ -79,6 +71,7 @@ def create_app(config_object=None):
     app.register_blueprint(reviews_bp, url_prefix="/reviews")
     app.register_blueprint(templates_bp, url_prefix="/templates")
     app.register_blueprint(media_bp, url_prefix="/media")
+    app.register_blueprint(materials_bp, url_prefix="/materials")
     app.register_blueprint(render_jobs_bp)
 
     @app.get("/healthz")
@@ -87,7 +80,6 @@ def create_app(config_object=None):
 
     with app.app_context():
         from . import models_rendering  # noqa: F401
-
         db.create_all()
         _repair_sqlite_schema_if_needed()
         _seed_if_empty()
@@ -96,16 +88,17 @@ def create_app(config_object=None):
 
 
 def _repair_sqlite_schema_if_needed() -> None:
-    """若核心表缺失或 id 不是主键，SQLite 自增会失效；此时整库重建。"""
     uri = str(db.engine.url)
     if not uri.startswith("sqlite"):
         return
 
-    _tables = (
+    tables = (
         "users",
         "templates",
         "topics",
         "contents",
+        "source_materials",
+        "material_insights",
         "rewrite_logs",
         "review_records",
         "operation_logs",
@@ -116,13 +109,9 @@ def _repair_sqlite_schema_if_needed() -> None:
     )
 
     def _id_is_primary_key(table: str) -> bool:
-        """表存在且存在名为 id 的主键列时为 True。"""
-        assert table in _tables
         with db.engine.connect() as conn:
             row = conn.execute(
-                text(
-                    "SELECT 1 FROM sqlite_master WHERE type='table' AND name=:t LIMIT 1"
-                ),
+                text("SELECT 1 FROM sqlite_master WHERE type='table' AND name=:t LIMIT 1"),
                 {"t": table},
             ).first()
             if not row:
@@ -133,49 +122,10 @@ def _repair_sqlite_schema_if_needed() -> None:
                 return r[5] == 1
         return False
 
-    if not all(_id_is_primary_key(t) for t in _tables):
+    if not all(_id_is_primary_key(t) for t in tables):
         db.drop_all()
         db.create_all()
 
 
 def _seed_if_empty():
-    from .models import CopyTemplate, User
-
-    if User.query.first():
-        return
-
-    admin = User(id=1, username="admin", role="admin")
-    admin.set_password("admin123")
-    db.session.add(admin)
-
-    op = User(id=2, username="operator", role="operator")
-    op.set_password("operator123")
-    db.session.add(op)
-
-    cr = User(id=3, username="creator", role="creator")
-    cr.set_password("creator123")
-    db.session.add(cr)
-    db.session.flush()
-
-    defaults = [
-        ("强冲突开场", "strong_conflict", "开头直接对立，双方都有理由，引导站队。"),
-        ("委屈共鸣型", "委屈共鸣", "第一人称委屈叙事，细节真实，不求对错求理解。"),
-        ("现实扎心型", "现实扎心", "金钱/面子/家庭现实，一句点破。"),
-        ("反转型", "反转型", "前半认同情绪，后半轻量反转。"),
-        ("站队争议型", "站队争议", "明确两种选择，评论区吵架。"),
-        ("聊天截图型", "chat", "适合伪聊天记录：短句、已读未回、表情包位。"),
-    ]
-    for i, (name, ttype, desc) in enumerate(defaults, start=1):
-        db.session.add(
-            CopyTemplate(
-                id=i,
-                name=name,
-                template_type=ttype,
-                prompt=f"结构提示：{desc}\n写作时突出情绪节奏与留白。",
-                description=desc,
-                is_active=True,
-            )
-        )
-        db.session.flush()
-
-    db.session.commit()
+    return
