@@ -17,6 +17,7 @@
       <ul class="navbar-nav me-auto">
         {% if current_user.is_authenticated %}
         <li class="nav-item"><a class="nav-link" href="{{ url_for('dashboard.index') }}">仪表盘</a></li>
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('materials.list_materials') }}">素材池</a></li>
         <li class="nav-item"><a class="nav-link" href="{{ url_for('topics.list_topics') }}">选题</a></li>
         <li class="nav-item"><a class="nav-link" href="{{ url_for('reviews.list_reviews') }}">审核池</a></li>
         <li class="nav-item"><a class="nav-link" href="{{ url_for('prompt_templates.list_templates') }}">模板库</a></li>
