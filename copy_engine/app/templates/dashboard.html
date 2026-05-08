@@ -1,51 +1,99 @@
 {% extends "base.html" %}
-{% block title %}仪表盘{% endblock %}
+{% block title %}首页工作台{% endblock %}
 {% block content %}
-<h2 class="mb-4">首页仪表盘</h2>
-<div class="row g-3">
-  <div class="col-md-4 col-lg-2">
-    <div class="card border-0 shadow-sm h-100">
-      <div class="card-body">
-        <div class="text-muted small">今日新增选题</div>
-        <div class="fs-3 fw-semibold">{{ topics_today }}</div>
-      </div>
-    </div>
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h2 class="mb-1">内容生产工作台</h2>
+    <div class="text-muted">从爆款素材池出发，拆解爆点，再进入选题、文案、审核和媒体生成。</div>
   </div>
-  <div class="col-md-4 col-lg-2">
-    <div class="card border-0 shadow-sm h-100">
-      <div class="card-body">
-        <div class="text-muted small">今日生成文案</div>
-        <div class="fs-3 fw-semibold">{{ contents_today }}</div>
-      </div>
-    </div>
-  </div>
-  <div class="col-md-4 col-lg-2">
-    <div class="card border-0 shadow-sm h-100">
-      <div class="card-body">
-        <div class="text-muted small">待审核</div>
-        <div class="fs-3 fw-semibold text-warning">{{ pending }}</div>
-      </div>
-    </div>
-  </div>
-  <div class="col-md-4 col-lg-2">
-    <div class="card border-0 shadow-sm h-100">
-      <div class="card-body">
-        <div class="text-muted small">已通过</div>
-        <div class="fs-3 fw-semibold text-success">{{ approved }}</div>
-      </div>
-    </div>
-  </div>
-  <div class="col-md-4 col-lg-2">
-    <div class="card border-0 shadow-sm h-100">
-      <div class="card-body">
-        <div class="text-muted small">启用模板数</div>
-        <div class="fs-3 fw-semibold">{{ tpl_count }}</div>
-      </div>
-    </div>
+  <div class="text-nowrap">
+    <a class="btn btn-primary" href="{{ url_for('materials.create') }}">录入爆款素材</a>
+    <a class="btn btn-outline-primary" href="{{ url_for('topics.create') }}">新建选题</a>
   </div>
 </div>
-<div class="mt-4">
-  <a class="btn btn-primary me-2" href="{{ url_for('topics.create') }}">新建选题</a>
-  <a class="btn btn-outline-primary" href="{{ url_for('reviews.list_reviews') }}">进入审核池</a>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-4 col-lg-2">
+    <div class="card border-0 shadow-sm h-100"><div class="card-body">
+      <div class="text-muted small">素材总数</div>
+      <div class="fs-3 fw-semibold">{{ materials_total|default(0) }}</div>
+    </div></div>
+  </div>
+  <div class="col-md-4 col-lg-2">
+    <div class="card border-0 shadow-sm h-100"><div class="card-body">
+      <div class="text-muted small">待拆解素材</div>
+      <div class="fs-3 fw-semibold text-secondary">{{ materials_raw|default(0) }}</div>
+    </div></div>
+  </div>
+  <div class="col-md-4 col-lg-2">
+    <div class="card border-0 shadow-sm h-100"><div class="card-body">
+      <div class="text-muted small">已转选题</div>
+      <div class="fs-3 fw-semibold text-success">{{ materials_selected|default(0) }}</div>
+    </div></div>
+  </div>
+  <div class="col-md-4 col-lg-2">
+    <div class="card border-0 shadow-sm h-100"><div class="card-body">
+      <div class="text-muted small">今日新增选题</div>
+      <div class="fs-3 fw-semibold">{{ topics_today }}</div>
+    </div></div>
+  </div>
+  <div class="col-md-4 col-lg-2">
+    <div class="card border-0 shadow-sm h-100"><div class="card-body">
+      <div class="text-muted small">今日生成文案</div>
+      <div class="fs-3 fw-semibold">{{ contents_today }}</div>
+    </div></div>
+  </div>
+  <div class="col-md-4 col-lg-2">
+    <div class="card border-0 shadow-sm h-100"><div class="card-body">
+      <div class="text-muted small">待审核</div>
+      <div class="fs-3 fw-semibold text-warning">{{ pending }}</div>
+    </div></div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-8">
+    <div class="card shadow-sm h-100">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <span class="fw-semibold">高潜素材 Top 5</span>
+        <a class="btn btn-sm btn-outline-primary" href="{{ url_for('materials.list_materials') }}">进入素材池</a>
+      </div>
+      <div class="list-group list-group-flush">
+        {% for m in top_materials|default([]) %}
+        <a class="list-group-item list-group-item-action" href="{{ url_for('materials.detail', material_id=m.id) }}">
+          <div class="d-flex justify-content-between gap-3">
+            <div>
+              <div class="fw-semibold">{{ m.title or '未命名素材' }}</div>
+              <div class="small text-muted text-truncate" style="max-width: 560px;">{{ m.raw_text or m.hot_comments or '—' }}</div>
+            </div>
+            <div class="text-nowrap">
+              <span class="badge text-bg-danger">热度 {{ m.viral_score }}</span>
+              <span class="badge text-bg-warning">争议 {{ m.discussion_score }}</span>
+            </div>
+          </div>
+        </a>
+        {% else %}
+        <div class="text-muted text-center py-4">暂无素材。先录入对标爆款，系统会给出爆点拆解和转选题入口。</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="card shadow-sm h-100">
+      <div class="card-header bg-white fw-semibold">今日工作流</div>
+      <div class="card-body">
+        <div class="d-grid gap-2">
+          <a class="btn btn-outline-primary" href="{{ url_for('materials.create') }}">1. 录入/沉淀素材</a>
+          <a class="btn btn-outline-primary" href="{{ url_for('materials.list_materials', status='raw') }}">2. 拆解待处理素材</a>
+          <a class="btn btn-outline-primary" href="{{ url_for('topics.list_topics') }}">3. 选题生成文案</a>
+          <a class="btn btn-outline-warning" href="{{ url_for('reviews.list_reviews') }}">4. 审核池复核</a>
+          <a class="btn btn-outline-success" href="{{ url_for('media.generate_media') }}">5. 媒体生成</a>
+        </div>
+        <hr>
+        <div class="small text-muted">启用模板数：{{ tpl_count }} · 已通过：{{ approved }}</div>
+      </div>
+    </div>
+  </div>
 </div>
 {% endblock %}
