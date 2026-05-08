@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}录入爆款素材{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h2 class="mb-0">录入爆款素材</h2>
+  <a class="btn btn-outline-secondary" href="{{ url_for('materials.list_materials') }}">返回素材池</a>
+</div>
+
+<div class="card shadow-sm">
+  <div class="card-body">
+    <form method="post">
+      <div class="row g-3">
+        <div class="col-md-8">
+          <label class="form-label">素材标题 / 爆点标题</label>
+          <input class="form-control" name="title" maxlength="255" placeholder="例如：婆婆一句话让儿媳饭桌沉默">
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">平台</label>
+          <select class="form-select" name="platform">
+            {% for p in platforms %}<option value="{{ p }}">{{ p }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">分类</label>
+          <select class="form-select" name="category">
+            <option value="">自动判断</option>
+            {% for c in categories %}<option value="{{ c }}">{{ c }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="col-md-8">
+          <label class="form-label">来源链接</label>
+          <input class="form-control" name="source_url" placeholder="可选：对标视频链接 / 笔记链接">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">来源账号</label>
+          <input class="form-control" name="source_account" placeholder="可选：账号名">
+        </div>
+        <div class="col-12">
+          <label class="form-label">原始文案 / 视频描述</label>
+          <textarea class="form-control" name="raw_text" rows="7" placeholder="粘贴对标素材正文、视频口播、剧情梗概"></textarea>
+        </div>
+        <div class="col-12">
+          <label class="form-label">热门评论</label>
+          <textarea class="form-control" name="hot_comments" rows="5" placeholder="粘贴高赞评论，一行一条，后续用于判断争议点和评论引导"></textarea>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">标签</label>
+          <input class="form-control" name="tags" placeholder="婆媳,冷战,饭桌">
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">点赞</label>
+          <input type="number" class="form-control" name="like_count" min="0" value="0">
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">评论</label>
+          <input type="number" class="form-control" name="comment_count" min="0" value="0">
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">分享</label>
+          <input type="number" class="form-control" name="share_count" min="0" value="0">
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">收藏</label>
+          <input type="number" class="form-control" name="collect_count" min="0" value="0">
+        </div>
+      </div>
+      <div class="mt-4">
+        <button class="btn btn-primary" type="submit">保存素材</button>
+        <a class="btn btn-link" href="{{ url_for('materials.list_materials') }}">取消</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
