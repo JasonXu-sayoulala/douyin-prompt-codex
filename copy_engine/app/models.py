@@ -83,6 +83,59 @@ class Content(db.Model):
     review_records = db.relationship("ReviewRecord", backref="content", lazy="dynamic", cascade="all, delete-orphan")
 
 
+class SourceMaterial(db.Model):
+    """爆款素材池：手工录入或后续抓取的原始素材。"""
+
+    __tablename__ = "source_materials"
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    platform = db.Column(db.String(30), default="manual", nullable=False, index=True)
+    source_url = db.Column(db.Text)
+    source_account = db.Column(db.String(120))
+    title = db.Column(db.Text)
+    raw_text = db.Column(db.Text)
+    hot_comments = db.Column(db.Text)
+    category = db.Column(db.String(50), index=True)
+    tags = db.Column(db.String(255))
+    like_count = db.Column(db.Integer, default=0, nullable=False)
+    comment_count = db.Column(db.Integer, default=0, nullable=False)
+    share_count = db.Column(db.Integer, default=0, nullable=False)
+    collect_count = db.Column(db.Integer, default=0, nullable=False)
+    viral_score = db.Column(db.Integer, default=0, nullable=False, index=True)
+    discussion_score = db.Column(db.Integer, default=0, nullable=False, index=True)
+    status = db.Column(db.String(20), default="raw", nullable=False, index=True)
+    created_by = db.Column(db.Integer, db.ForeignKey("users.id"), index=True)
+    created_at = db.Column(db.DateTime, default=utcnow, nullable=False)
+    updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow, nullable=False)
+
+    author = db.relationship("User", foreign_keys=[created_by])
+    insights = db.relationship(
+        "MaterialInsight",
+        backref="material",
+        lazy="dynamic",
+        cascade="all, delete-orphan",
+    )
+
+
+class MaterialInsight(db.Model):
+    """爆点拆解结果：供选题和文案生成复用。"""
+
+    __tablename__ = "material_insights"
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    material_id = db.Column(db.Integer, db.ForeignKey("source_materials.id"), nullable=False, index=True)
+    conflict_point = db.Column(db.Text)
+    pain_point = db.Column(db.Text)
+    audience = db.Column(db.Text)
+    hook = db.Column(db.Text)
+    story_angle = db.Column(db.Text)
+    rewrite_suggestion = db.Column(db.Text)
+    risk_note = db.Column(db.Text)
+    viral_score = db.Column(db.Integer, default=0, nullable=False)
+    discussion_score = db.Column(db.Integer, default=0, nullable=False)
+    created_at = db.Column(db.DateTime, default=utcnow, nullable=False)
+
+
 class RewriteLog(db.Model):
     __tablename__ = "rewrite_logs"
 
@@ -170,6 +223,8 @@ for _model in (
     Topic,
     CopyTemplate,
     Content,
+    SourceMaterial,
+    MaterialInsight,
     RewriteLog,
     ReviewRecord,
     OperationLog,
