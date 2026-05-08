@@ -14,10 +14,10 @@ from flask import (
 from flask_login import current_user, login_required
 
 from ..extensions import db
-from ..models import Content, CopyTemplate, OperationLog, ReviewRecord, Topic
+from ..models import Content, CopyTemplate, MaterialInsight, OperationLog, ReviewRecord, SourceMaterial, Topic
 from ..services.content_service import ContentService
-from ..services.rewrite_service import RewriteService
 from ..utils import wants_json
+from ..services.rewrite_service import RewriteService
 
 contents_bp = Blueprint("contents", __name__)
 
@@ -43,11 +43,37 @@ def _apply_risk(content: Content) -> None:
     content.risk_level = r["level"]
 
 
+def _material_id_from_topic(topic: Topic) -> int | None:
+    source = (topic.source or "").strip()
+    if not source.startswith("material:"):
+        return None
+    try:
+        return int(source.split(":", 2)[1])
+    except (IndexError, TypeError, ValueError):
+        return None
+
+
+def _material_context_for_topic(topic: Topic):
+    material_id = _material_id_from_topic(topic)
+    if not material_id:
+        return None, None
+    material = db.session.get(SourceMaterial, material_id)
+    if not material:
+        return None, None
+    insight = (
+        MaterialInsight.query.filter_by(material_id=material.id)
+        .order_by(MaterialInsight.created_at.desc())
+        .first()
+    )
+    return material, insight
+
+
 @contents_bp.route("/generate/<int:topic_id>", methods=["GET", "POST"])
 @login_required
 def generate(topic_id):
     topic = Topic.query.get_or_404(topic_id)
     templates = CopyTemplate.query.filter_by(is_active=True).order_by(CopyTemplate.name).all()
+    source_material, material_insight = _material_context_for_topic(topic)
 
     if request.method == "POST":
         data = request.get_json(silent=True) if wants_json() else None
@@ -87,6 +113,8 @@ def generate(topic_id):
                 "contents/generate.html",
                 topic=topic,
                 templates=templates,
+                source_material=source_material,
+                material_insight=material_insight,
             )
 
         for c in created:
@@ -98,6 +126,7 @@ def generate(topic_id):
         if wants_json():
             return {
                 "ok": True,
+                "source_material_id": source_material.id if source_material else None,
                 "items": [
                     {
                         "id": c.id,
@@ -125,6 +154,8 @@ def generate(topic_id):
         topic=topic,
         templates=templates,
         recent=recent,
+        source_material=source_material,
+        material_insight=material_insight,
     )
 
 
@@ -308,5 +339,4 @@ def export_content(id):
             download_name=f"content_{id}.txt",
         )
 
-    # copy 模式：页面展示
     return render_template("contents/export_copy.html", content=content, payload=payload, risk=risk)
