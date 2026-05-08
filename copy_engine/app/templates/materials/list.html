@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}爆款素材池{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div>
+    <h2 class="mb-1">爆款素材池</h2>
+    <div class="text-muted small">沉淀对标内容、热门评论和冲突爆点，再转入选题生产链路。</div>
+  </div>
+  <a class="btn btn-primary" href="{{ url_for('materials.create') }}">录入素材</a>
+</div>
+
+<form class="row g-2 mb-3" method="get">
+  <div class="col-md-3">
+    <input class="form-control" name="q" placeholder="搜索标题 / 正文 / 评论" value="{{ filters.q }}">
+  </div>
+  <div class="col-md-2">
+    <select class="form-select" name="platform">
+      <option value="">全部平台</option>
+      {% for p in platforms %}
+      <option value="{{ p }}" {% if filters.platform == p %}selected{% endif %}>{{ p }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-md-2">
+    <select class="form-select" name="category">
+      <option value="">全部分类</option>
+      {% for c in categories %}
+      <option value="{{ c }}" {% if filters.category == c %}selected{% endif %}>{{ c }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-md-2">
+    <select class="form-select" name="status">
+      <option value="">全部状态</option>
+      {% for s in statuses %}
+      <option value="{{ s }}" {% if filters.status == s %}selected{% endif %}>{{ s }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-md-2">
+    <button class="btn btn-secondary w-100" type="submit">筛选</button>
+  </div>
+</form>
+
+<div class="table-responsive card shadow-sm">
+  <table class="table table-hover align-middle mb-0">
+    <thead class="table-light">
+      <tr>
+        <th>ID</th>
+        <th>素材</th>
+        <th>平台</th>
+        <th>分类</th>
+        <th>热度</th>
+        <th>争议</th>
+        <th>状态</th>
+        <th>操作</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in items %}
+      <tr>
+        <td>{{ item.id }}</td>
+        <td style="min-width: 280px;">
+          <a class="fw-semibold" href="{{ url_for('materials.detail', material_id=item.id) }}">{{ item.title or '未命名素材' }}</a>
+          <div class="text-muted small text-truncate" style="max-width: 460px;">{{ item.raw_text or item.hot_comments or '—' }}</div>
+        </td>
+        <td>{{ item.platform }}</td>
+        <td>{{ item.category or '—' }}</td>
+        <td><span class="badge text-bg-danger">{{ item.viral_score }}</span></td>
+        <td><span class="badge text-bg-warning">{{ item.discussion_score }}</span></td>
+        <td><span class="badge text-bg-light text-dark">{{ item.status }}</span></td>
+        <td class="text-nowrap">
+          <a class="btn btn-sm btn-outline-primary" href="{{ url_for('materials.detail', material_id=item.id) }}">查看</a>
+          <form method="post" action="{{ url_for('materials.analyze', material_id=item.id) }}" class="d-inline">
+            <button class="btn btn-sm btn-outline-secondary" type="submit">拆解</button>
+          </form>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="8" class="text-center text-muted py-4">暂无素材，先录入一个对标爆款。</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
